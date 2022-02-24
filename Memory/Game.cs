@@ -3,27 +3,31 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Threading;
 
 namespace Memory
 {
     internal class Game
     {
+        private const int Highscores_Max_Amount = 10;
         private const int ASCII_NumberValue_Min = 49;
         private const int ASCII_NumberValue_Max = 52;
 
         private int _ASCII_CharValue_Min;
         private int _ASCII_CharValue_Max;
 
-        public static string FilePath =
-            Path.Combine(Environment.CurrentDirectory, "Words.txt");
+        private bool _isSuccess;
 
-        private static FileHelper _fileHelper = new FileHelper(FilePath);
         private static Random _random = new Random();
 
         private Stopwatch _timer = new Stopwatch();
         private ConsoleTable _coveredTable;
         private ConsoleTable _uncoveredTable;
+
+        private string _filePath =
+            Path.Combine(Environment.CurrentDirectory, "Highscores.txt");
+        private FileHelper _fileHelper = new FileHelper();
 
         private string _difficultyLevel;
         private int _wordsLeft;
@@ -71,7 +75,7 @@ namespace Memory
 
                     var chars = _firstInput.ToCharArray();
 
-                    if (  !Char.IsLetter(chars[0])
+                    if (!Char.IsLetter(chars[0])
                        || !Char.IsDigit(chars[1])
                        || (int)chars[0] < _ASCII_CharValue_Min
                        || (int)chars[0] > _ASCII_CharValue_Max
@@ -134,6 +138,75 @@ namespace Memory
             }
 
             CheckResult();
+            HandleHighscores();
+            PrepareNewGame();
+        }
+
+        private void PrepareNewGame()
+        {
+            _guessedPicks.Clear();
+            _timer.Reset();
+        }
+
+        private void HandleHighscores()
+        {
+            if (_isSuccess)
+            {
+                var wantToSaveScore = AskUser("Type yes if you wanna save your score: ");
+                if (wantToSaveScore)
+                    SaveScore();
+            }
+
+            var wantToSeeHighscores = AskUser("\nType yes if you wanna see highscores: ");
+            if (wantToSeeHighscores)
+                DisplayHighscore();
+        }
+
+        private List<Highscore> GetHighscoreList()
+        {
+            var highscores = _fileHelper.DeserializeFromFile(_filePath).OrderBy(x => x.GuessingTimeInSeconds).ToList();
+            return highscores;
+        }
+
+        private void DisplayHighscore()
+        {
+            var highscores = GetHighscoreList();
+
+            foreach (var score in highscores)
+            {
+                MessageHelper.Info($"{score.Nickname} \t{score.DateOfGame.ToString("dd/MM/yyyy")} \t{score.GuessingTimeInSeconds} \t{score.GuessingTries}\n");
+            }
+        }
+
+        private void SaveScore()
+        {
+            MessageHelper.Info("Please type your nickname: ");
+            var userNickname = Console.ReadLine();
+
+            var highscores = GetHighscoreList();
+            highscores = CheckHighscoresAmount(highscores);
+
+            highscores.Add(new Highscore
+            {
+                Nickname = userNickname,
+                DateOfGame = DateTime.Now,
+                GuessingTimeInSeconds = _timer.Elapsed.Seconds,
+                GuessingTries = _chancesAmount - _chancesLeft
+            });
+
+            _fileHelper.SerializeToFile(highscores, _filePath);
+        }
+
+        private List<Highscore> CheckHighscoresAmount(List<Highscore> highscores)
+        {
+            var amount = highscores.Count;
+            if (amount == Highscores_Max_Amount)
+            {
+                var scoreToDelete = highscores.Last();
+                highscores.Remove(scoreToDelete);
+            }
+
+            return highscores;
         }
 
         private void CheckResult()
@@ -144,15 +217,14 @@ namespace Memory
             {
                 MessageHelper.Info("Congratulations! You win!\n");
                 MessageHelper.Info($"It took you {_timer.Elapsed.Seconds}s and {_chancesAmount - _chancesLeft} chances to discover {_wordsAmount} words!\n\n");
+                _isSuccess = true;
             }
             else
             {
                 MessageHelper.Warning("You will win next time!\n");
                 MessageHelper.Warning($"You used all {_chancesAmount} chances! {_wordsLeft} words left\n\n");
+                _isSuccess = false;
             }
-
-            _guessedPicks.Clear();
-            _timer.Reset();
         }
 
         private void CompareWords(string wordFromCoveredTable, string wordToCompare)
@@ -254,7 +326,8 @@ namespace Memory
         private List<string> PrepareWords()
         {
             var i = 0;
-            var wordsAll = _fileHelper.ReadFromFile();
+            var filePath = Path.Combine(Environment.CurrentDirectory, "Words.txt");
+            var wordsAll = _fileHelper.ReadFromFile(filePath);
             var wordsForGame = new List<string>();
 
             while (i < _wordsLeft)
@@ -298,7 +371,6 @@ namespace Memory
             MessageHelper.Info($"Difficulty: {_difficultyLevel} \tChances left: {_chancesLeft} \tWords left: {_wordsLeft}\n");
             table.Write();
         }
-
         private ConsoleTable GenerateTable()
         {
             var table = new ConsoleTable(" ", "1", "2", "3", "4");
@@ -334,7 +406,6 @@ namespace Memory
                 return _difficultyLevel;
             }
         }
-
         public void SetUpGame(string difficultyLevel)
         {
             if (difficultyLevel.Equals("easy"))
@@ -362,12 +433,10 @@ namespace Memory
             PrepareTables(words);
             StartGame();
         }
-
-        public bool AskForNextGame()
+        public bool AskUser(string message)
         {
-            MessageHelper.InputRequest("Type yes if you wanna play again: ");
+            MessageHelper.InputRequest(message);
             var userAnswer = Console.ReadLine();
-
             return userAnswer.Equals("yes");
         }
     }

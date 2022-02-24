@@ -50,6 +50,7 @@
   <ItemGroup>
     <Compile Include="FileHelper.cs" />
     <Compile Include="Game.cs" />
+    <Compile Include="Highscore.cs" />
     <Compile Include="MessageHelper.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -59,7 +60,12 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="bin\Debug\Words.txt" />
+    <Content Include="TextFiles\Highscores.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TextFiles\Words.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -1,21 +1,15 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Xml.Serialization;
 
 namespace Memory
 {
-    internal class FileHelper
+    public class FileHelper
     {
-        private string _filePath;
-
-        public FileHelper(string filePath)
+        public List<string> ReadFromFile(string filePath)
         {
-            _filePath = filePath;
-        }
-
-        public List<string> ReadFromFile()
-        {
-            using (var reader = new StreamReader(_filePath))
+            using (var reader = new StreamReader(filePath))
             {
                 var words = reader
                     .ReadToEnd()
@@ -24,6 +18,31 @@ namespace Memory
                     .ToList();
 
                 return words;
+            }
+        }
+
+        public void SerializeToFile(List<Highscore> highscores, string filePath)
+        {
+            var serializer = new XmlSerializer(typeof(List<Highscore>));
+
+            using (var streamWriter = new StreamWriter(filePath))
+            {
+                serializer.Serialize(streamWriter, highscores);
+                streamWriter.Close();
+            }
+        }
+
+        public List<Highscore> DeserializeFromFile(string filePath)
+        {
+            if (!File.Exists(filePath))
+                return new List<Highscore>();
+
+            var serializer = new XmlSerializer(typeof(List<Highscore>));
+            using (var streamReader = new StreamReader(filePath))
+            {
+                var students = (List<Highscore>)serializer.Deserialize(streamReader);
+                streamReader.Close();
+                return students;
             }
         }
     }
