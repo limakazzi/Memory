@@ -1,22 +1,21 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Memory
 {
     internal class Program
     {
-        private static GameLogic _game = new GameLogic();
-        static void Main(string[] args)
+        private static Game _game = new Game();
+        private static bool _playAgain;
+        static void Main()
         {
-            while (true)
+            do
             {
-            var difficultyLevel = _game.ChooseDifficultyLevel();
-            _game.SetUpGame(difficultyLevel);
-            }
+                Console.Clear();
+                var difficultyLevel = _game.ChooseDifficultyLevel();
+                _game.SetUpGame(difficultyLevel);
+
+                _playAgain = _game.AskForNextGame();
+            } while (_playAgain);
         }
     }
 }
