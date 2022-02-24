@@ -1,6 +1,7 @@
 ﻿using ConsoleTables;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Threading;
 
@@ -18,8 +19,11 @@ namespace Memory
             Path.Combine(Environment.CurrentDirectory, "Words.txt");
 
         private static FileHelper _fileHelper = new FileHelper(FilePath);
-
         private static Random _random = new Random();
+
+        private Stopwatch _timer = new Stopwatch();
+        private ConsoleTable _coveredTable;
+        private ConsoleTable _uncoveredTable;
 
         private string _difficultyLevel;
         private int _wordsLeft;
@@ -28,9 +32,6 @@ namespace Memory
         private int _chancesAmount;
         private int _columnsQuantity;
         private int _rowsQuantity;
-
-        private ConsoleTable _coveredTable;
-        private ConsoleTable _uncoveredTable;
 
         private string _wordFromCoveredTable;
         private string _wordToCompare;
@@ -43,9 +44,10 @@ namespace Memory
 
         private List<string> _guessedPicks = new List<string>();
 
-
         private void StartGame()
         {
+            _timer.Start();
+
             DrawTable(_coveredTable);
 
             while (_chancesLeft > 0 && _wordsLeft > 0)
@@ -136,10 +138,12 @@ namespace Memory
 
         private void CheckResult()
         {
+            _timer.Stop();
+
             if (_wordsLeft == 0 && _chancesLeft > 0)
             {
                 MessageHelper.Info("Congratulations! You win!\n");
-                MessageHelper.Info($"It took you {_chancesAmount - _chancesLeft} chances to discover {_wordsAmount} words!\n\n");
+                MessageHelper.Info($"It took you {_timer.Elapsed.Seconds}s and {_chancesAmount - _chancesLeft} chances to discover {_wordsAmount} words!\n\n");
             }
             else
             {
@@ -148,6 +152,7 @@ namespace Memory
             }
 
             _guessedPicks.Clear();
+            _timer.Reset();
         }
 
         private void CompareWords(string wordFromCoveredTable, string wordToCompare)
@@ -246,7 +251,7 @@ namespace Memory
 
         }
 
-        private List<string> PrepareMatrixCells()
+        private List<string> PrepareWords()
         {
             var i = 0;
             var wordsAll = _fileHelper.ReadFromFile();
@@ -268,7 +273,7 @@ namespace Memory
             return wordsForGame;
         }
 
-        private void PrepareMatrix(List<string> words)
+        private void PrepareTables(List<string> words)
         {
             _coveredTable = GenerateTable();
             _uncoveredTable = GenerateTable();
@@ -353,8 +358,8 @@ namespace Memory
                 _ASCII_CharValue_Max = 68;
             }
 
-            var words = PrepareMatrixCells();
-            PrepareMatrix(words);
+            var words = PrepareWords();
+            PrepareTables(words);
             StartGame();
         }
 
