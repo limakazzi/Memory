@@ -10,8 +10,12 @@ namespace Memory
         {
             do
             {
+                _game.SetAllWordsList();
+
                 Console.Clear();
-                string difficultyLevel = _game.GetDifficultyLevel();
+                string difficultyLevel = 
+                    _game.GetDifficultyLevel();
+
                 _game.SetUpGame(difficultyLevel);
 
                 _playAgain = _game.AskUser("Type yes if you wanna play again: ");

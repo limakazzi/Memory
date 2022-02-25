@@ -54,7 +54,8 @@ namespace Memory
         private string _firstInput;
         private string _secondInput;
 
-        private List<string> _guessedPicks = new List<string>();
+        private List<string> _guessedPicksList = new List<string>();
+        private List<string> _allWordsList = new List<string>();
 
         private void StartGame()
         {
@@ -123,7 +124,7 @@ namespace Memory
                 MessageHelper.Warning("Please type the right pick (ex. B2)\n\n");
                 return false;
             }
-            else if (_guessedPicks.Contains(input))
+            else if (_guessedPicksList.Contains(input))
             {
                 MessageHelper.Warning("You already guessed that pick\n\n");
                 return false;
@@ -148,7 +149,7 @@ namespace Memory
 
         private void PrepareNewGame()
         {
-            _guessedPicks.Clear();
+            _guessedPicksList.Clear();
             _timer.Reset();
         }
 
@@ -261,8 +262,8 @@ namespace Memory
                 MessageHelper.Info("Great!");
                 Thread.Sleep(2000);
                 --_wordsLeft;
-                _guessedPicks.Add(_firstInput);
-                _guessedPicks.Add(_secondInput);
+                _guessedPicksList.Add(_firstInput);
+                _guessedPicksList.Add(_secondInput);
             }
 
             else
@@ -347,47 +348,26 @@ namespace Memory
 
         }
 
-        private List<string> GetPreparedWordsList()
+        private List<string> GetGameWordsList()
         {
             var i = 0;
-            List<string> wordsAll = null;
-            bool isFilePathCorrect = false;
-
-            do
-            {
-                var filePath = Path.Combine(Environment.CurrentDirectory, _wordsFileName);
-
-                try
-                {
-                    wordsAll = _fileHelper.GetWordsListFromFile(filePath);
-                    isFilePathCorrect = true;
-                }
-                catch (FileNotFoundException)
-                {
-                    MessageHelper.Warning($"File {_wordsFileName} not found!\n");
-                    MessageHelper.Warning("Type new filename: ");
-                    _wordsFileName = Console.ReadLine();
-                }
-            } while (!isFilePathCorrect);
-
-
             var wordsForGame = new List<string>();
 
             while (i < _wordsAmount)
             {
-                var value = s_random.Next(wordsAll.Count);
-
-                if (wordsForGame.Contains(wordsAll[value]))
+                var value = s_random.Next(_allWordsList.Count);
+                if (wordsForGame.Contains(_allWordsList[value]))
                     continue;
 
-                wordsForGame.Add(wordsAll[value]);
+                wordsForGame.Add(_allWordsList[value]);
                 i++;
             }
-
             wordsForGame.AddRange(wordsForGame);
 
             return wordsForGame;
         }
+
+        
 
         private void PrepareTables(List<string> words)
         {
@@ -437,6 +417,32 @@ namespace Memory
             return table;
         }
 
+        public void SetAllWordsList()
+        {
+            var isFilePathCorrect = false;
+            List<string> allWordsList = null;
+
+            do
+            {
+                var filePath = Path.Combine(Environment.CurrentDirectory, _wordsFileName);
+
+                try
+                {
+                    allWordsList = _fileHelper.GetWordsListFromFile(filePath);
+                    isFilePathCorrect = true;
+
+                }
+                catch (FileNotFoundException)
+                {
+                    MessageHelper.Warning($"File {_wordsFileName} not found!\n");
+                    MessageHelper.Warning("Type new filename: ");
+                    _wordsFileName = Console.ReadLine();
+                }
+            } while (!isFilePathCorrect);
+
+            _allWordsList = allWordsList;
+        }
+
         public string GetDifficultyLevel()
         {
             MessageHelper.Default("WELCOME TO MEMORY GAME!\n");
@@ -480,7 +486,7 @@ namespace Memory
             string highscoreFileName = difficultyLevel + PartialHighscoreFileName;
             _highscoreFilePath = Path.Combine(Environment.CurrentDirectory, highscoreFileName);
 
-            List<string> words = GetPreparedWordsList();
+            List<string> words = GetGameWordsList();
             PrepareTables(words);
             StartGame();
         }
