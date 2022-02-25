@@ -61,7 +61,7 @@ namespace Memory
         {
             _timer.Start();
 
-            DrawTable(_coveredTable);
+            DisplayTable(_coveredTable);
 
             while (_chancesLeft > 0 && _wordsLeft > 0)
             {
@@ -73,14 +73,14 @@ namespace Memory
                     if (!IsInputValid(_firstInput))
                         continue;
 
-                    char[] inputChars = _firstInput.ToCharArray();
+                    var inputAsCharArray = _firstInput.ToCharArray();
 
-                    if (!IsInputFromRange(inputChars))
+                    if (!IsInputFromRange(inputAsCharArray))
                         continue;
 
-                    var tableValues = Converters.GetUserInputConvertedToIntArray(inputChars);
-                    _firstPick = tableValues;
-                    UncoverFirstPick(tableValues);
+                    var pickValues = Converters.GetUserInputConvertedToIntArray(inputAsCharArray);
+                    _firstPick = pickValues;
+                    UncoverFirstPick(pickValues);
                     break;
                 }
 
@@ -98,14 +98,14 @@ namespace Memory
                         continue;
                     }
 
-                    char[] inputChars = _secondInput.ToCharArray();
+                    var inputAsCharArray = _secondInput.ToCharArray();
 
-                    if (!IsInputFromRange(inputChars))
+                    if (!IsInputFromRange(inputAsCharArray))
                         continue;
 
-                    var tableValues = Converters.GetUserInputConvertedToIntArray(inputChars);
-                    _secondPick = tableValues;
-                    GetWordToCompare(tableValues);
+                    var pickValues = Converters.GetUserInputConvertedToIntArray(inputAsCharArray);
+                    _secondPick = pickValues;
+                    SetWordToCompare(pickValues);
                     break;
                 }
 
@@ -157,12 +157,12 @@ namespace Memory
         {
             if (_isSuccess && IsResultAbleToBeHighscore())
             {
-                var wantToSaveScore = AskUser("Type yes if you wanna save your score: ");
+                var wantToSaveScore = IsUserWill("Type yes if you wanna save your score: ");
                 if (wantToSaveScore)
                     SaveScore();
             }
 
-            var wantToSeeHighscores = AskUser("\nType yes if you wanna see highscores: ");
+            var wantToSeeHighscores = IsUserWill("\nType yes if you wanna see highscores: ");
             if (wantToSeeHighscores)
                 DisplayHighscore();
         }
@@ -256,7 +256,7 @@ namespace Memory
         private void CompareWords(string wordFromCoveredTable, string wordToCompare)
         {
             Uncover(_secondPick);
-            DrawTable(_coveredTable);
+            DisplayTable(_coveredTable);
 
             if (wordFromCoveredTable.Equals(wordToCompare))
             {
@@ -276,7 +276,7 @@ namespace Memory
                 Cover(_secondPick);
             }
 
-            DrawTable(_coveredTable);
+            DisplayTable(_coveredTable);
         }
 
         private void Uncover(int[] pickValues)
@@ -289,7 +289,7 @@ namespace Memory
             _coveredTable.Rows[pickValues[0]].SetValue("x", pickValues[1]);
         }
 
-        private void GetWordToCompare(int[] tableValues)
+        private void SetWordToCompare(int[] tableValues)
         {
             _wordToCompare = _uncoveredTable.Rows[tableValues[0]].GetValue(tableValues[1]).ToString();
         }
@@ -300,7 +300,7 @@ namespace Memory
             var wordToUncover = _uncoveredTable.Rows[tableValues[0]].GetValue(tableValues[1]);
             _coveredTable.Rows[tableValues[0]].SetValue(wordToUncover, tableValues[1]);
             _wordFromCoveredTable = wordToUncover.ToString();
-            DrawTable(_coveredTable);
+            DisplayTable(_coveredTable);
         }
 
         private List<string> GetGameWordsList()
@@ -322,7 +322,7 @@ namespace Memory
             return wordsForGame;
         }
 
-        private void PrepareTables(List<string> words)
+        private void SetTables(List<string> words)
         {
             _coveredTable = TableHelper.GetTable(_difficultyLevel);
             _uncoveredTable = TableHelper.GetTable(_difficultyLevel);
@@ -339,7 +339,7 @@ namespace Memory
             }
         }
 
-        private void DrawTable(ConsoleTable table)
+        private void DisplayTable(ConsoleTable table)
         {
             Console.Clear();
             MessageHelper.Info($"Difficulty: {_difficultyLevel} \tChances left: {_chancesLeft} \tWords left: {_wordsLeft}\n");
@@ -359,7 +359,6 @@ namespace Memory
                 {
                     allWordsList = _fileHelper.GetWordsListFromFile(filePath);
                     isFilePathCorrect = true;
-
                 }
                 catch (FileNotFoundException)
                 {
@@ -415,12 +414,12 @@ namespace Memory
             string highscoreFileName = difficultyLevel + PartialHighscoreFileName;
             _highscoreFilePath = Path.Combine(Environment.CurrentDirectory, highscoreFileName);
 
-            List<string> words = GetGameWordsList();
-            PrepareTables(words);
+            var words = GetGameWordsList();
+            SetTables(words);
             StartGame();
         }
 
-        public bool AskUser(string message)
+        public bool IsUserWill(string message)
         {
             MessageHelper.InputRequest(message);
             string userAnswer = Console.ReadLine();
