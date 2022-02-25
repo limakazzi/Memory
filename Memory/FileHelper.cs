@@ -7,7 +7,7 @@ namespace Memory
 {
     public class FileHelper
     {
-        public List<string> ReadFromFile(string filePath)
+        public List<string> GetWordsListFromFile(string filePath)
         {
             using (var reader = new StreamReader(filePath))
             {
@@ -21,7 +21,7 @@ namespace Memory
             }
         }
 
-        public void SerializeToFile(List<Highscore> highscores, string filePath)
+        public void SerializeHighscoresToFile(List<Highscore> highscores, string filePath)
         {
             var serializer = new XmlSerializer(typeof(List<Highscore>));
 
@@ -32,7 +32,7 @@ namespace Memory
             }
         }
 
-        public List<Highscore> DeserializeFromFile(string filePath)
+        public List<Highscore> DeserializeHighscoresFromFile(string filePath)
         {
             if (!File.Exists(filePath))
                 return new List<Highscore>();

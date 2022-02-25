@@ -24,11 +24,10 @@ namespace Memory
             Console.Write(message);
             Console.ResetColor();
         }
-
         public static void Default(string message)
         {
             Console.ResetColor();
-            Console.Write(message);
+            Console.Write(message);  
         }
     }
 }
