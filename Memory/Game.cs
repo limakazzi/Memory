@@ -78,7 +78,7 @@ namespace Memory
                     if (!IsInputFromRange(inputChars))
                         continue;
 
-                    var tableValues = GetValueFromUncoveredTable(inputChars);
+                    var tableValues = Converters.GetUserInputConvertedToIntArray(inputChars);
                     _firstPick = tableValues;
                     UncoverFirstPick(tableValues);
                     break;
@@ -103,7 +103,7 @@ namespace Memory
                     if (!IsInputFromRange(inputChars))
                         continue;
 
-                    var tableValues = GetValueFromUncoveredTable(inputChars);
+                    var tableValues = Converters.GetUserInputConvertedToIntArray(inputChars);
                     _secondPick = tableValues;
                     GetWordToCompare(tableValues);
                     break;
@@ -190,6 +190,7 @@ namespace Memory
 
             return isAble;
         }
+
         private void DeleteLastHighscore(Highscore lastHighscore, List<Highscore> highscores)
         {
             highscores.Remove(lastHighscore);
@@ -204,7 +205,7 @@ namespace Memory
 
         private void DisplayHighscore()
         {
-            ConsoleTable highscoreTable = GetTable(isHighscoreTable: true);
+            ConsoleTable highscoreTable = TableHelper.GetTable(isHighscoreTable: true);
             var highscores = GetHighscoreList();
 
             foreach (var score in highscores)
@@ -235,8 +236,8 @@ namespace Memory
         private void CheckResult()
         {
             _timer.Stop();
-            TimeSpan _timerTime = _timer.Elapsed;
-            _timeOfTry = (int) _timerTime.TotalSeconds;
+            TimeSpan timerTime = _timer.Elapsed;
+            _timeOfTry = (int) timerTime.TotalSeconds;
 
             if (_wordsLeft == 0 && _chancesLeft > 0)
             {
@@ -274,6 +275,7 @@ namespace Memory
                 Cover(_firstPick);
                 Cover(_secondPick);
             }
+
             DrawTable(_coveredTable);
         }
 
@@ -296,56 +298,9 @@ namespace Memory
         {
 
             var wordToUncover = _uncoveredTable.Rows[tableValues[0]].GetValue(tableValues[1]);
-
             _coveredTable.Rows[tableValues[0]].SetValue(wordToUncover, tableValues[1]);
             _wordFromCoveredTable = wordToUncover.ToString();
-
             DrawTable(_coveredTable);
-        }
-
-        private int[] GetValueFromUncoveredTable(char[] chars)
-        {
-            var pickedRow = 0;
-            var pickedColumn = 1;
-
-            switch (chars[0])
-            {
-                case 'A':
-                    pickedRow = 0;
-                    break;
-                case 'B':
-                    pickedRow = 1;
-                    break;
-                case 'C':
-                    pickedRow = 2;
-                    break;
-                case 'D':
-                    pickedRow = 3;
-                    break;
-                default: break;
-            }
-
-            switch (chars[1])
-            {
-                case '1':
-                    pickedColumn = 1;
-                    break;
-                case '2':
-                    pickedColumn = 2;
-                    break;
-                case '3':
-                    pickedColumn = 3;
-                    break;
-                case '4':
-                    pickedColumn = 4;
-                    break;
-                default: break;
-            }
-
-            int[] tableValues = new int[] { pickedRow, pickedColumn };
-
-            return tableValues;
-
         }
 
         private List<string> GetGameWordsList()
@@ -367,16 +322,14 @@ namespace Memory
             return wordsForGame;
         }
 
-        
-
         private void PrepareTables(List<string> words)
         {
-            _coveredTable = GetTable();
-            _uncoveredTable = GetTable();
+            _coveredTable = TableHelper.GetTable(_difficultyLevel);
+            _uncoveredTable = TableHelper.GetTable(_difficultyLevel);
 
             for (int i = 0; i < _rowsQuantity; i++)
             {
-                for (int j = 1; j < ColumnsQuantity; j++)
+                for (int j = 1; j <= ColumnsQuantity; j++)
                 {
                     int index = s_random.Next(words.Count);
                     var nextWord = words[index];
@@ -384,8 +337,6 @@ namespace Memory
                     words.RemoveAt(index);
                 }
             }
-
-            Console.WriteLine();
         }
 
         private void DrawTable(ConsoleTable table)
@@ -393,28 +344,6 @@ namespace Memory
             Console.Clear();
             MessageHelper.Info($"Difficulty: {_difficultyLevel} \tChances left: {_chancesLeft} \tWords left: {_wordsLeft}\n");
             table.Write();
-        }
-        private ConsoleTable GetTable()
-        {
-            var table = new ConsoleTable(" ", "1", "2", "3", "4");
-            table.Configure(o => o.EnableCount = false);
-            table.AddRow("A", "x", "x", "x", "x")
-                 .AddRow("B", "x", "x", "x", "x");
-
-            if (_difficultyLevel.Equals("hard"))
-            {
-                table.AddRow("C", "x", "x", "x", "x")
-                     .AddRow("D", "x", "x", "x", "x");
-            }
-
-            return table;
-        }
-        private ConsoleTable GetTable(bool isHighscoreTable)
-        {
-            var table = new ConsoleTable("Nickname", "Date of game", "Time [s]", "Chances used");
-            table.Configure(o => o.EnableCount = false);
-
-            return table;
         }
 
         public void SetAllWordsList()
@@ -490,6 +419,7 @@ namespace Memory
             PrepareTables(words);
             StartGame();
         }
+
         public bool AskUser(string message)
         {
             MessageHelper.InputRequest(message);
