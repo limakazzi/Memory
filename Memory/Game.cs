@@ -12,7 +12,6 @@ namespace Memory
     {
         private const int ASCII_MinNumberValue = 49;
         private const int ASCII_MaxNumberValue = 52;
-        private const int HighscoresMaxAmount = 10;
         private const int ColumnsQuantity = 4;
         private const int ASCII_MinCharValueDifficultyEasy = 65;
         private const int ASCII_MaxCharValueDifficultyEasy = 66;
@@ -24,7 +23,6 @@ namespace Memory
         private const int RowsQuantityDifficultyHard = 4;
         private const int WordsAmountDifficultyHard = 8;
         private const int ChancesAmountDifficultyHard = 15;
-        private const string PartialHighscoreFileName = "_Highscores.txt";
 
         private static Random s_random = new Random();
         private Stopwatch _timer = new Stopwatch();
@@ -47,7 +45,6 @@ namespace Memory
         private bool _isSuccess;
 
         private string _wordsFileName = "Words.txt";
-        private string _highscoreFilePath;
         private string _difficultyLevel;
         private string _wordFromCoveredTable;
         private string _wordToCompare;
@@ -89,7 +86,7 @@ namespace Memory
                     MessageHelper.InputRequest("Plese type your second pick (ex. B2): ");
                     _secondInput = Console.ReadLine().ToUpper();
 
-                    if(!IsInputValid(_secondInput))
+                    if (!IsInputValid(_secondInput))
                         continue;
 
                     if (_secondInput.Equals(_firstInput))
@@ -134,11 +131,11 @@ namespace Memory
 
         private bool IsInputFromRange(char[] inputChars)
         {
-            if (!Char.IsLetter(inputChars[0]) || 
-                !Char.IsDigit(inputChars[1]) || 
-                ((int)inputChars[0] < _asciiMinCharValue) || 
-                ((int)inputChars[0] > _asciiMaxCharValue) || 
-                ((int)inputChars[1] < ASCII_MinNumberValue) || 
+            if (!Char.IsLetter(inputChars[0]) ||
+                !Char.IsDigit(inputChars[1]) ||
+                ((int)inputChars[0] < _asciiMinCharValue) ||
+                ((int)inputChars[0] > _asciiMaxCharValue) ||
+                ((int)inputChars[1] < ASCII_MinNumberValue) ||
                 ((int)inputChars[1] > ASCII_MaxNumberValue))
             {
                 MessageHelper.Warning("Please type the pick from range\n\n");
@@ -155,89 +152,23 @@ namespace Memory
 
         private void HandleHighscores()
         {
-            if (_isSuccess && IsResultAbleToBeHighscore())
+            if (_isSuccess && HighscoreHelper.IsResultAbleToBeHighscore(_timeOfTry))
             {
                 var wantToSaveScore = IsUserWill("Type yes if you wanna save your score: ");
                 if (wantToSaveScore)
-                    SaveScore();
+                    HighscoreHelper.SaveScore(_timeOfTry, (_chancesAmount - _chancesLeft));
             }
 
             var wantToSeeHighscores = IsUserWill("\nType yes if you wanna see highscores: ");
             if (wantToSeeHighscores)
-                DisplayHighscore();
-        }
-
-        private bool IsResultAbleToBeHighscore()
-        {
-            bool isAble;
-            List<Highscore> highscores = GetHighscoreList();
-
-            if (!highscores.Any())
-                return true;
-
-            int highscoreAmount = highscores.Count;
-            Highscore lastHighscore = highscores.Last();
-
-            if (highscoreAmount < HighscoresMaxAmount)
-                isAble = true;
-            else if (highscoreAmount == HighscoresMaxAmount && lastHighscore.GuessingTimeInSeconds > _timeOfTry)
-            {
-                DeleteLastHighscore(lastHighscore, highscores);
-                isAble = true;
-            }
-            else
-                isAble = false;
-
-            return isAble;
-        }
-
-        private void DeleteLastHighscore(Highscore lastHighscore, List<Highscore> highscores)
-        {
-            highscores.Remove(lastHighscore);
-            _fileHelper.SerializeHighscoresToFile(highscores, _highscoreFilePath);
-        }
-
-        private List<Highscore> GetHighscoreList()
-        {
-            var highscores = _fileHelper.DeserializeHighscoresFromFile(_highscoreFilePath).OrderBy(x => x.GuessingTimeInSeconds).ToList();
-            return highscores;
-        }
-
-        private void DisplayHighscore()
-        {
-            ConsoleTable highscoreTable = TableHelper.GetTable(isHighscoreTable: true);
-            var highscores = GetHighscoreList();
-
-            foreach (var score in highscores)
-            {
-                highscoreTable.AddRow(score.Nickname, score.DateOfGame.ToString("dd/MM/yyyy"), score.GuessingTimeInSeconds, score.GuessingTries);
-            }
-
-            highscoreTable.Write();
-        }
-
-        private void SaveScore()
-        {
-            MessageHelper.Info("Please type your nickname: ");
-            var userNickname = Console.ReadLine();
-            var highscores = GetHighscoreList();
-
-            highscores.Add(new Highscore
-            {
-                Nickname = userNickname,
-                DateOfGame = DateTime.Now,
-                GuessingTimeInSeconds = _timeOfTry,
-                GuessingTries = _chancesAmount - _chancesLeft
-            });
-
-            _fileHelper.SerializeHighscoresToFile(highscores, _highscoreFilePath);
+                HighscoreHelper.DisplayHighscore();
         }
 
         private void CheckResult()
         {
             _timer.Stop();
             TimeSpan timerTime = _timer.Elapsed;
-            _timeOfTry = (int) timerTime.TotalSeconds;
+            _timeOfTry = (int)timerTime.TotalSeconds;
 
             if (_wordsLeft == 0 && _chancesLeft > 0)
             {
@@ -411,8 +342,7 @@ namespace Memory
                 _asciiMaxCharValue = ASCII_MaxCharValueDifficultyHard;
             }
 
-            string highscoreFileName = difficultyLevel + PartialHighscoreFileName;
-            _highscoreFilePath = Path.Combine(Environment.CurrentDirectory, highscoreFileName);
+            HighscoreHelper.SetHighscoreFilePath(difficultyLevel);
 
             var words = GetGameWordsList();
             SetTables(words);

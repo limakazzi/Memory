@@ -52,6 +52,7 @@
     <Compile Include="FileHelper.cs" />
     <Compile Include="Game.cs" />
     <Compile Include="Highscore.cs" />
+    <Compile Include="HighscoreHelper.cs" />
     <Compile Include="MessageHelper.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
