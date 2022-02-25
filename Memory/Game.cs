@@ -1,9 +1,10 @@
 ﻿using ConsoleTables;
+using Memory.Helpers;
+using Memory.Models;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Threading;
 
 namespace Memory

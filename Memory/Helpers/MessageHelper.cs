@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Memory
+namespace Memory.Helpers
 {
     public static class MessageHelper
     {

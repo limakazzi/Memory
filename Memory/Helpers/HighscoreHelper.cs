@@ -1,10 +1,11 @@
 ﻿using ConsoleTables;
+using Memory.Models.Domains;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-namespace Memory
+namespace Memory.Helpers
 {
     internal static class HighscoreHelper
     {

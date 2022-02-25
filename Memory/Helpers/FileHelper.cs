@@ -1,9 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using Memory.Models.Domains;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Xml.Serialization;
 
-namespace Memory
+namespace Memory.Helpers
 {
     public class FileHelper
     {

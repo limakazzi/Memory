@@ -1,6 +1,6 @@
 ﻿using ConsoleTables;
 
-namespace Memory
+namespace Memory.Helpers
 {
     public static class TableHelper
     {

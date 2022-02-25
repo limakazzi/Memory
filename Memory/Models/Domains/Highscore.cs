@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Memory
+namespace Memory.Models.Domains
 {
     public class Highscore
     {

@@ -1,4 +1,4 @@
-﻿namespace Memory
+﻿namespace Memory.Models
 {
     public static class Converters
     {
