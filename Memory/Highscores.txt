@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<ArrayOfHighscore xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <Highscore>
-    <Nickname>Kamil</Nickname>
-    <DateOfGame>2022-02-24T19:57:07.7688145+01:00</DateOfGame>
-    <GuessingTimeInSeconds>42</GuessingTimeInSeconds>
-    <GuessingTries>5</GuessingTries>
-  </Highscore>
-</ArrayOfHighscore>

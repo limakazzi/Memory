@@ -14,7 +14,7 @@ namespace Memory
                 var difficultyLevel = _game.ChooseDifficultyLevel();
                 _game.SetUpGame(difficultyLevel);
 
-                _playAgain = _game.AskUser("\nType yes if you wanna play again: ");
+                _playAgain = _game.AskUser("Type yes if you wanna play again: ");
             } while (_playAgain);
         }
     }

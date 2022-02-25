@@ -22,11 +22,12 @@ namespace Memory
         private static Random _random = new Random();
 
         private Stopwatch _timer = new Stopwatch();
+        private int _timeOfTry;
+
         private ConsoleTable _coveredTable;
         private ConsoleTable _uncoveredTable;
 
-        private string _filePath =
-            Path.Combine(Environment.CurrentDirectory, "Highscores.txt");
+        private string _highscoreFilePath;
         private FileHelper _fileHelper = new FileHelper();
 
         private string _difficultyLevel;
@@ -150,7 +151,7 @@ namespace Memory
 
         private void HandleHighscores()
         {
-            if (_isSuccess)
+            if (_isSuccess && IsResultAbleToBeHighscore())
             {
                 var wantToSaveScore = AskUser("Type yes if you wanna save your score: ");
                 if (wantToSaveScore)
@@ -162,61 +163,81 @@ namespace Memory
                 DisplayHighscore();
         }
 
+        private bool IsResultAbleToBeHighscore()
+        {
+            bool isAble;
+            List<Highscore> highscores = GetHighscoreList();
+
+            if (!highscores.Any())
+                return true;
+
+            int highscoreAmount = highscores.Count;
+            Highscore lastHighscore = highscores.Last();
+
+            if (highscoreAmount < Highscores_Max_Amount)
+                isAble = true;
+            else if (highscoreAmount == Highscores_Max_Amount && lastHighscore.GuessingTimeInSeconds > _timeOfTry)
+            {
+                DeleteLastHighscore(lastHighscore, highscores);
+                isAble = true;
+            }
+            else
+                isAble = false;
+
+            return isAble;
+        }
+        private void DeleteLastHighscore(Highscore lastHighscore, List<Highscore> highscores)
+        {
+            highscores.Remove(lastHighscore);
+            _fileHelper.SerializeToFile(highscores, _highscoreFilePath);
+        }
+
         private List<Highscore> GetHighscoreList()
         {
-            var highscores = _fileHelper.DeserializeFromFile(_filePath).OrderBy(x => x.GuessingTimeInSeconds).ToList();
+            var highscores = _fileHelper.DeserializeFromFile(_highscoreFilePath).OrderBy(x => x.GuessingTimeInSeconds).ToList();
             return highscores;
         }
 
         private void DisplayHighscore()
         {
+            ConsoleTable highscoreTable = GenerateTable(isHighscoreTable: true);
             var highscores = GetHighscoreList();
 
             foreach (var score in highscores)
             {
-                MessageHelper.Info($"{score.Nickname} \t{score.DateOfGame.ToString("dd/MM/yyyy")} \t{score.GuessingTimeInSeconds} \t{score.GuessingTries}\n");
+                highscoreTable.AddRow(score.Nickname, score.DateOfGame.ToString("dd/MM/yyyy"), score.GuessingTimeInSeconds, score.GuessingTries);
             }
+
+            highscoreTable.Write();
         }
 
         private void SaveScore()
         {
             MessageHelper.Info("Please type your nickname: ");
             var userNickname = Console.ReadLine();
-
             var highscores = GetHighscoreList();
-            highscores = CheckHighscoresAmount(highscores);
 
             highscores.Add(new Highscore
             {
                 Nickname = userNickname,
                 DateOfGame = DateTime.Now,
-                GuessingTimeInSeconds = _timer.Elapsed.Seconds,
+                GuessingTimeInSeconds = _timeOfTry,
                 GuessingTries = _chancesAmount - _chancesLeft
             });
 
-            _fileHelper.SerializeToFile(highscores, _filePath);
-        }
-
-        private List<Highscore> CheckHighscoresAmount(List<Highscore> highscores)
-        {
-            var amount = highscores.Count;
-            if (amount == Highscores_Max_Amount)
-            {
-                var scoreToDelete = highscores.Last();
-                highscores.Remove(scoreToDelete);
-            }
-
-            return highscores;
+            _fileHelper.SerializeToFile(highscores, _highscoreFilePath);
         }
 
         private void CheckResult()
         {
             _timer.Stop();
+            TimeSpan _timerTime = _timer.Elapsed;
+            _timeOfTry = (int) _timerTime.TotalSeconds;
 
             if (_wordsLeft == 0 && _chancesLeft > 0)
             {
                 MessageHelper.Info("Congratulations! You win!\n");
-                MessageHelper.Info($"It took you {_timer.Elapsed.Seconds}s and {_chancesAmount - _chancesLeft} chances to discover {_wordsAmount} words!\n\n");
+                MessageHelper.Info($"It took you {_timeOfTry}s and {_chancesAmount - _chancesLeft} chances to discover {_wordsAmount} words!\n\n");
                 _isSuccess = true;
             }
             else
@@ -326,8 +347,30 @@ namespace Memory
         private List<string> PrepareWords()
         {
             var i = 0;
-            var filePath = Path.Combine(Environment.CurrentDirectory, "Words.txt");
-            var wordsAll = _fileHelper.ReadFromFile(filePath);
+
+            string wordsFileName = "Words.txt";     //Przenieś do zakresu globanego, albo stworzyć osobny plik z ustawieniami
+
+            List<string> wordsAll = null;
+            bool isFilePathCorrect = false;
+
+            do
+            {
+                var filePath = Path.Combine(Environment.CurrentDirectory, wordsFileName);
+
+                try
+                {
+                    wordsAll = _fileHelper.ReadFromFile(filePath);
+                    isFilePathCorrect = true;
+                }
+                catch (FileNotFoundException)
+                {
+                    MessageHelper.Warning($"File {wordsFileName} not found!\n");
+                    MessageHelper.Warning("Type new filename: ");
+                    wordsFileName = Console.ReadLine();
+                }
+            } while (!isFilePathCorrect);
+
+
             var wordsForGame = new List<string>();
 
             while (i < _wordsLeft)
@@ -386,6 +429,13 @@ namespace Memory
 
             return table;
         }
+        private ConsoleTable GenerateTable(bool isHighscoreTable)
+        {
+            var table = new ConsoleTable("Nickname", "Date of game", "Time [s]", "Chances used");
+            table.Configure(o => o.EnableCount = false);
+
+            return table;
+        }
 
         public string ChooseDifficultyLevel()
         {
@@ -428,6 +478,9 @@ namespace Memory
                 _ASCII_CharValue_Min = 65;
                 _ASCII_CharValue_Max = 68;
             }
+
+            string highscoreFileName = difficultyLevel + "_Highscores.txt";
+            _highscoreFilePath = Path.Combine(Environment.CurrentDirectory, highscoreFileName);
 
             var words = PrepareWords();
             PrepareTables(words);
