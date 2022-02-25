@@ -24,10 +24,11 @@ namespace Memory
         private const int RowsQuantityDifficultyHard = 4;
         private const int WordsAmountDifficultyHard = 8;
         private const int ChancesAmountDifficultyHard = 15;
+        private const string CoveredValueSign = "x";
 
-        private static Random s_random = new Random();
-        private Stopwatch _timer = new Stopwatch();
-        private FileHelper _fileHelper = new FileHelper();
+        private static Random _random;
+        private Stopwatch _timer;
+        private FileHelper _fileHelper;
         private ConsoleTable _coveredTable;
         private ConsoleTable _uncoveredTable;
 
@@ -45,7 +46,7 @@ namespace Memory
 
         private bool _isSuccess;
 
-        private string _wordsFileName = "Words.txt";
+        private string _wordsFileName;
         private string _difficultyLevel;
         private string _wordFromCoveredTable;
         private string _wordToCompare;
@@ -53,9 +54,17 @@ namespace Memory
         private string _secondInput;
 
         private List<string> _guessedPicksList = new List<string>();
-        private List<string> _allWordsList = new List<string>();
+        private List<string> _allWordsList;
 
-        private void StartGame()
+        public Game(Random random, Stopwatch stopwatch, FileHelper fileHelper, string wordsFileName)
+        {
+            _random = random;
+            _timer = stopwatch;
+            _fileHelper = fileHelper;
+            _wordsFileName = wordsFileName;
+        }
+
+        public void StartGame()
         {
             _timer.Start();
 
@@ -124,7 +133,7 @@ namespace Memory
             }
             else if (_guessedPicksList.Contains(input))
             {
-                MessageHelper.Warning("You already guessed that pick\n\n");
+                MessageHelper.Warning("You already guessed that pick!\n\n");
                 return false;
             }
             else return true;
@@ -155,12 +164,12 @@ namespace Memory
         {
             if (_isSuccess && HighscoreHelper.IsResultAbleToBeHighscore(_timeOfTry))
             {
-                var wantToSaveScore = IsUserWill("Type yes if you wanna save your score: ");
+                var wantToSaveScore = IsUserWill("Type yes if you would like to save your score: ");
                 if (wantToSaveScore)
                     HighscoreHelper.SaveScore(_timeOfTry, (_chancesAmount - _chancesLeft));
             }
 
-            var wantToSeeHighscores = IsUserWill("\nType yes if you wanna see highscores: ");
+            var wantToSeeHighscores = IsUserWill("\nType yes if you would like to see highscores: ");
             if (wantToSeeHighscores)
                 HighscoreHelper.DisplayHighscore();
         }
@@ -174,7 +183,7 @@ namespace Memory
             if (_wordsLeft == 0 && _chancesLeft > 0)
             {
                 MessageHelper.Info("Congratulations! You win!\n");
-                MessageHelper.Info($"It took you {_timeOfTry}s and {_chancesAmount - _chancesLeft} chances to discover {_wordsAmount} words!\n\n");
+                MessageHelper.Info($"It tooks you {_timeOfTry}s and {_chancesAmount - _chancesLeft} chances to discover {_wordsAmount} words!\n\n");
                 _isSuccess = true;
             }
             else
@@ -218,7 +227,7 @@ namespace Memory
 
         private void Cover(int[] pickValues)
         {
-            _coveredTable.Rows[pickValues[0]].SetValue("x", pickValues[1]);
+            _coveredTable.Rows[pickValues[0]].SetValue(CoveredValueSign, pickValues[1]);
         }
 
         private void SetWordToCompare(int[] tableValues)
@@ -242,7 +251,7 @@ namespace Memory
 
             while (i < _wordsAmount)
             {
-                var value = s_random.Next(_allWordsList.Count);
+                var value = _random.Next(_allWordsList.Count);
                 if (wordsForGame.Contains(_allWordsList[value]))
                     continue;
 
@@ -263,7 +272,7 @@ namespace Memory
             {
                 for (int j = 1; j <= ColumnsQuantity; j++)
                 {
-                    int index = s_random.Next(words.Count);
+                    int index = _random.Next(words.Count);
                     var nextWord = words[index];
                     _uncoveredTable.Rows[i].SetValue(nextWord, j);
                     words.RemoveAt(index);
@@ -281,7 +290,6 @@ namespace Memory
         public void SetAllWordsList()
         {
             var isFilePathCorrect = false;
-            List<string> allWordsList = null;
 
             do
             {
@@ -289,18 +297,24 @@ namespace Memory
 
                 try
                 {
-                    allWordsList = _fileHelper.GetWordsListFromFile(filePath);
+                    _allWordsList = _fileHelper.GetWordsListFromFile(filePath);
                     isFilePathCorrect = true;
                 }
-                catch (FileNotFoundException)
+                catch (Exception ex)
                 {
-                    MessageHelper.Warning($"File {_wordsFileName} not found!\n");
-                    MessageHelper.Warning("Type new filename: ");
+                    if (ex is UnauthorizedAccessException)
+                        MessageHelper.Warning($"Filename cannot be empty or access to the path is denied!\n");
+
+                    if (ex is FileNotFoundException)
+                        MessageHelper.Warning($"File {_wordsFileName} not found!\n");
+
+                    MessageHelper.Warning("Type new filename (ex. words.txt): ");
                     _wordsFileName = Console.ReadLine();
                 }
+
             } while (!isFilePathCorrect);
 
-            _allWordsList = allWordsList;
+            Console.Clear();
         }
 
         public string GetDifficultyLevel()
@@ -347,7 +361,6 @@ namespace Memory
 
             var words = GetGameWordsList();
             SetTables(words);
-            StartGame();
         }
 
         public bool IsUserWill(string message)

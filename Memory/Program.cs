@@ -1,24 +1,25 @@
 ﻿using System;
+using Memory.Helpers;
+using System.Diagnostics;
 
 namespace Memory
 {
     class Program
     {
-        private static Game _game = new Game();
-        private static bool _playAgain;
+
         static void Main()
         {
+            Game _game = new Game(new Random(), new Stopwatch(), new FileHelper(), "Words.txt");
+            bool _playAgain;
+
             do
             {
                 _game.SetAllWordsList();
+                _game.SetUpGame(_game.GetDifficultyLevel());
+                _game.StartGame();
 
-                Console.Clear();
-                string difficultyLevel = 
-                    _game.GetDifficultyLevel();
+                _playAgain = _game.IsUserWill("Type yes if you would like to play again: ");
 
-                _game.SetUpGame(difficultyLevel);
-
-                _playAgain = _game.IsUserWill("Type yes if you wanna play again: ");
             } while (_playAgain);
         }
     }
