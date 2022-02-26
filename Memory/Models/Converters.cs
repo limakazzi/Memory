@@ -2,6 +2,8 @@
 {
     public static class Converters
     {
+        //Convert user input (string as char array) to int array
+        //Int array is used for select corresponding table rows and columns
         public static int[] GetUserInputConvertedToIntArray(char[] input)
         {
             int selectedRow = 0;

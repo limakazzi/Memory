@@ -15,9 +15,9 @@ namespace Memory
             do
             {
                 _game.SetAllWordsList();
+                _game.ShowStartScreen();
                 _game.SetUpGame(_game.GetDifficultyLevel());
                 _game.StartGame();
-
                 _playAgain = _game.IsUserWill("Type yes if you would like to play again: ");
 
             } while (_playAgain);

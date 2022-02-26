@@ -2,6 +2,7 @@
 
 namespace Memory.Helpers
 {
+    //Beautify messages
     public static class MessageHelper
     {
         public static void Warning(string message)
@@ -28,6 +29,12 @@ namespace Memory.Helpers
         {
             Console.ResetColor();
             Console.Write(message);  
+        }
+        public static void Logo(string message)
+        {
+            Console.ForegroundColor = ConsoleColor.Blue;
+            Console.Write(message);
+            Console.ResetColor();
         }
     }
 }

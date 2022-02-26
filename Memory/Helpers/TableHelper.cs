@@ -4,17 +4,24 @@ namespace Memory.Helpers
 {
     public static class TableHelper
     {
-        public static ConsoleTable GetTable(string difficultyLevel)
+        public static ConsoleTable GetTable(string difficultyLevel, string tableSpacer, string coveredValueLabel)
         {
-            var table = new ConsoleTable(" ", "1", "2", "3", "4");
-            table.Configure(o => o.EnableCount = false);
-            table.AddRow("A", "x", "x", "x", "x")
-                 .AddRow("B", "x", "x", "x", "x");
+            //Generate main game table
+            var table = new ConsoleTable(" ", tableSpacer + "1" + tableSpacer,
+                                              tableSpacer + "2" + tableSpacer,
+                                              tableSpacer + "3" + tableSpacer,
+                                              tableSpacer + "4" + tableSpacer
+                                        );
 
+            table.Configure(o => o.EnableCount = false);
+            table.AddRow("A", coveredValueLabel, coveredValueLabel, coveredValueLabel, coveredValueLabel)
+                 .AddRow("B", coveredValueLabel, coveredValueLabel, coveredValueLabel, coveredValueLabel);
+
+            //If hard, add two more rows
             if (difficultyLevel.Equals("hard"))
             {
-                table.AddRow("C", "x", "x", "x", "x")
-                     .AddRow("D", "x", "x", "x", "x");
+                table.AddRow("C", coveredValueLabel, coveredValueLabel, coveredValueLabel, coveredValueLabel)
+                     .AddRow("D", coveredValueLabel, coveredValueLabel, coveredValueLabel, coveredValueLabel);
             }
 
             return table;
@@ -22,6 +29,7 @@ namespace Memory.Helpers
 
         public static ConsoleTable GetTable(bool isHighscoreTable)
         {
+            //Generate highscores table
             var table = new ConsoleTable("Nickname", "Date of game", "Time [s]", "Chances used");
             table.Configure(o => o.EnableCount = false);
 

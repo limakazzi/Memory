@@ -24,7 +24,7 @@ namespace Memory
         private const int RowsQuantityDifficultyHard = 4;
         private const int WordsAmountDifficultyHard = 8;
         private const int ChancesAmountDifficultyHard = 15;
-        private const string CoveredValueSign = "x";
+        private const string LogoFileName = "Logo.txt";
 
         private static Random _random;
         private Stopwatch _timer;
@@ -52,6 +52,7 @@ namespace Memory
         private string _wordToCompare;
         private string _firstInput;
         private string _secondInput;
+        private string CoveredValueLabel;
 
         private List<string> _guessedPicksList = new List<string>();
         private List<string> _allWordsList;
@@ -77,16 +78,21 @@ namespace Memory
                     MessageHelper.InputRequest("Plese type your first pick (ex. B2): ");
                     _firstInput = Console.ReadLine().ToUpper();
 
+                    //Input validation
                     if (!IsInputValid(_firstInput))
                         continue;
 
                     var inputAsCharArray = _firstInput.ToCharArray();
 
+                    //Input validation
                     if (!IsInputFromRange(inputAsCharArray))
                         continue;
 
+                    //Convert input to int array
                     var pickValues = Converters.GetUserInputConvertedToIntArray(inputAsCharArray);
                     _firstPick = pickValues;
+
+                    //Uncover first word based on int arrayy
                     UncoverFirstPick(pickValues);
                     break;
                 }
@@ -96,9 +102,11 @@ namespace Memory
                     MessageHelper.InputRequest("Plese type your second pick (ex. B2): ");
                     _secondInput = Console.ReadLine().ToUpper();
 
+                    //Data validation
                     if (!IsInputValid(_secondInput))
                         continue;
 
+                    //Check if the second input is not the same as the first
                     if (_secondInput.Equals(_firstInput))
                     {
                         MessageHelper.Warning("You already typed this pick!\n\n");
@@ -107,11 +115,15 @@ namespace Memory
 
                     var inputAsCharArray = _secondInput.ToCharArray();
 
+                    //Input validation
                     if (!IsInputFromRange(inputAsCharArray))
                         continue;
 
+                    //Convert input to int array
                     var pickValues = Converters.GetUserInputConvertedToIntArray(inputAsCharArray);
                     _secondPick = pickValues;
+
+                    //Set word to compare (word to uncover) based on int array
                     SetWordToCompare(pickValues);
                     break;
                 }
@@ -126,6 +138,7 @@ namespace Memory
 
         private bool IsInputValid(string input)
         {
+            //Input validation
             if (input.Length != 2)
             {
                 MessageHelper.Warning("Please type the right pick (ex. B2)\n\n");
@@ -137,10 +150,11 @@ namespace Memory
                 return false;
             }
             else return true;
-        }
+        }   
 
         private bool IsInputFromRange(char[] inputChars)
         {
+            //Input validation
             if (!Char.IsLetter(inputChars[0]) ||
                 !Char.IsDigit(inputChars[1]) ||
                 ((int)inputChars[0] < _asciiMinCharValue) ||
@@ -162,6 +176,7 @@ namespace Memory
 
         private void HandleHighscores()
         {
+            //Check if user won and if his score could be highscore
             if (_isSuccess && HighscoreHelper.IsResultAbleToBeHighscore(_timeOfTry))
             {
                 var wantToSaveScore = IsUserWill("Type yes if you would like to save your score: ");
@@ -180,6 +195,7 @@ namespace Memory
             TimeSpan timerTime = _timer.Elapsed;
             _timeOfTry = (int)timerTime.TotalSeconds;
 
+            //Show message depending of result
             if (_wordsLeft == 0 && _chancesLeft > 0)
             {
                 MessageHelper.Info("Congratulations! You win!\n");
@@ -196,9 +212,11 @@ namespace Memory
 
         private void CompareWords(string wordFromCoveredTable, string wordToCompare)
         {
+            //Uncover second user pick and display table
             Uncover(_secondPick);
             DisplayTable(_coveredTable);
 
+            //If the words match, leave them uncover and decrease the number of remaining words
             if (wordFromCoveredTable.Equals(wordToCompare))
             {
                 MessageHelper.Info("Great!");
@@ -208,6 +226,7 @@ namespace Memory
                 _guessedPicksList.Add(_secondInput);
             }
 
+            //If the words not match, cover them again and decrease the number of remaining chances
             else
             {
                 MessageHelper.Warning("Wrong!");
@@ -222,22 +241,24 @@ namespace Memory
 
         private void Uncover(int[] pickValues)
         {
+            //Uncover second user pick
             _coveredTable.Rows[pickValues[0]].SetValue(_wordToCompare, pickValues[1]);
         }
 
         private void Cover(int[] pickValues)
         {
-            _coveredTable.Rows[pickValues[0]].SetValue(CoveredValueSign, pickValues[1]);
+            _coveredTable.Rows[pickValues[0]].SetValue(CoveredValueLabel, pickValues[1]);
         }
 
         private void SetWordToCompare(int[] tableValues)
         {
+            //Depending on converted user second input, get word to compare to first word picked
             _wordToCompare = _uncoveredTable.Rows[tableValues[0]].GetValue(tableValues[1]).ToString();
         }
 
         private void UncoverFirstPick(int[] tableValues)
         {
-
+            //Depending on converted user first input, from uncovered table, get word to show on covered table and display covered table
             var wordToUncover = _uncoveredTable.Rows[tableValues[0]].GetValue(tableValues[1]);
             _coveredTable.Rows[tableValues[0]].SetValue(wordToUncover, tableValues[1]);
             _wordFromCoveredTable = wordToUncover.ToString();
@@ -246,6 +267,7 @@ namespace Memory
 
         private List<string> GetGameWordsList()
         {
+            //From list of all words select amount of words depending of difficulty level
             var i = 0;
             var wordsForGame = new List<string>();
 
@@ -258,6 +280,7 @@ namespace Memory
                 wordsForGame.Add(_allWordsList[value]);
                 i++;
             }
+            //Double the game words list
             wordsForGame.AddRange(wordsForGame);
 
             return wordsForGame;
@@ -265,9 +288,15 @@ namespace Memory
 
         private void SetTables(List<string> words)
         {
-            _coveredTable = TableHelper.GetTable(_difficultyLevel);
-            _uncoveredTable = TableHelper.GetTable(_difficultyLevel);
+            //Create value for covering words
+            string tableSpacer = new string(' ', (_fileHelper.GetMaxNumOfCharacters()) / 2);
+            CoveredValueLabel = tableSpacer + "x" + tableSpacer;
 
+            //Create game tables
+            _coveredTable = TableHelper.GetTable(_difficultyLevel, tableSpacer, CoveredValueLabel);
+            _uncoveredTable = TableHelper.GetTable(_difficultyLevel, tableSpacer, CoveredValueLabel);
+
+            //Fill uncovered table with words
             for (int i = 0; i < _rowsQuantity; i++)
             {
                 for (int j = 1; j <= ColumnsQuantity; j++)
@@ -289,6 +318,7 @@ namespace Memory
 
         public void SetAllWordsList()
         {
+            //Try to get list of all words from txt file, catch possible exceptions
             var isFilePathCorrect = false;
 
             do
@@ -319,7 +349,6 @@ namespace Memory
 
         public string GetDifficultyLevel()
         {
-            MessageHelper.Default("WELCOME TO MEMORY GAME!\n");
             MessageHelper.Info("For 4 words to discover and 10 chances type: easy\n");
             MessageHelper.Info("For 8 words to discover and 15 chances type: hard\n\n");
 
@@ -357,6 +386,7 @@ namespace Memory
                 _asciiMaxCharValue = ASCII_MaxCharValueDifficultyHard;
             }
 
+            //Set highscore filepath depending on difficulty level
             HighscoreHelper.SetHighscoreFilePath(difficultyLevel);
 
             var words = GetGameWordsList();
@@ -368,6 +398,21 @@ namespace Memory
             MessageHelper.InputRequest(message);
             string userAnswer = Console.ReadLine();
             return userAnswer.Equals("yes");
+        }
+
+        public void ShowStartScreen()
+        {
+            //Try to show game logo, if failed show welcome message
+            try
+            {
+                string filePath = Path.Combine(Environment.CurrentDirectory, LogoFileName);
+                string asciiLogo = _fileHelper.GetLogoFromFile(filePath);
+                MessageHelper.Logo(asciiLogo);
+            }
+            catch (Exception)
+            {
+                MessageHelper.Logo("WELCOME TO MEMORY GAME!\n\n");
+            }         
         }
     }
 }

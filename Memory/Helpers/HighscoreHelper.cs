@@ -17,12 +17,14 @@ namespace Memory.Helpers
 
         private static void DeleteLastHighscore(Highscore lastHighscore, List<Highscore> highscores)
         {
+            //Delete last element of highscore list
             highscores.Remove(lastHighscore);
             _fileHelper.SerializeHighscoresToFile(highscores, _highscoreFileName);
         }
 
         private static List<Highscore> GetHighscoreList()
         {
+            //Get highscores list ordered by guessing time 
             var highscores = _fileHelper.DeserializeHighscoresFromFile(_highscoreFileName).OrderBy(x => x.GuessingTimeInSeconds).ToList();
             return highscores;
         }
@@ -52,14 +54,17 @@ namespace Memory.Helpers
 
         public static void DisplayHighscore()
         {
+            //Generate highscore table and read highscores from file
             ConsoleTable highscoreTable = TableHelper.GetTable(isHighscoreTable: true);
             var highscores = GetHighscoreList();
 
+            //For every highscore add table row
             foreach (var score in highscores)
             {
                 highscoreTable.AddRow(score.Nickname, score.DateOfGame.ToString("dd/MM/yyyy"), score.GuessingTimeInSeconds, score.GuessingTries);
             }
 
+            //Display highscore
             highscoreTable.Write();
         }
 
@@ -68,12 +73,16 @@ namespace Memory.Helpers
             bool isAble;
             List<Highscore> highscores = GetHighscoreList();
 
+            //If there is no highscores saved you can add your score
             if (!highscores.Any())
                 return true;
 
             int highscoreAmount = highscores.Count;
             Highscore lastHighscore = highscores.Last();
 
+            //If highscore list is not full you can add your score
+            //If highscore list is full but your score is better than last highscore, delete it and you can add your score
+            //In any other case you cannot save your score
             if (highscoreAmount < HighscoresMaxAmount)
                 isAble = true;
             else if (highscoreAmount == HighscoresMaxAmount && lastHighscore.GuessingTimeInSeconds > timeOfTry)
