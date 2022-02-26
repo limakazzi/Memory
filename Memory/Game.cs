@@ -102,7 +102,7 @@ namespace Memory
                     MessageHelper.InputRequest("Plese type your second pick (ex. B2): ");
                     _secondInput = Console.ReadLine().ToUpper();
 
-                    //Data validation
+                    //Input validation
                     if (!IsInputValid(_secondInput))
                         continue;
 
@@ -138,7 +138,7 @@ namespace Memory
 
         private bool IsInputValid(string input)
         {
-            //Input validation
+            //Check if input has 2 characters and if is not guessed before
             if (input.Length != 2)
             {
                 MessageHelper.Warning("Please type the right pick (ex. B2)\n\n");
@@ -154,7 +154,7 @@ namespace Memory
 
         private bool IsInputFromRange(char[] inputChars)
         {
-            //Input validation
+            //Check if first char is number, second char is letter and range
             if (!Char.IsLetter(inputChars[0]) ||
                 !Char.IsDigit(inputChars[1]) ||
                 ((int)inputChars[0] < _asciiMinCharValue) ||
